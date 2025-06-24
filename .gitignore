@@ -43,4 +43,21 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+# Office autosave files
+~$*
+*.doc
+*.docx
+*.pptx
+*.dotx
+
+# Flutter & VS Code
+.dart_tool/
+build/
+.idea/
+.vscode/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+
 lib/firebase_options.dart
+.env
