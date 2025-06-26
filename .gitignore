@@ -61,3 +61,7 @@ build/
 
 lib/firebase_options.dart
 .env
+
+
+build/*
+!build/web/
