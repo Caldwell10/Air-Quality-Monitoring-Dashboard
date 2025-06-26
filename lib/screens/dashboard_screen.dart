@@ -1,17 +1,73 @@
 import 'package:flutter/material.dart';
+import 'package:mqtt_client/mqtt_client.dart';
+import 'package:mqtt_client/mqtt_server_client.dart';
+import 'dart:convert';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Hard-coded sample values for poor air quality
-    final double temperature = 28.5;
-    final double humidity = 37.5;
-    final int rawAQ = 2709;
-    final double co2ppm = 14.8;
-    final String timestamp = "2025-06-24 15:45:00";
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
 
+class _DashboardScreenState extends State<DashboardScreen> {
+  final client = MqttServerClient('broker.hivemq.com', '');
+  double temperature = 0;
+  double humidity = 0;
+  int rawAQ = 0;
+  double co2ppm = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    connectToBroker();
+  }
+
+  Future<void> connectToBroker() async {
+    client.port = 1883;
+    client.keepAlivePeriod = 20;
+    client.logging(on: true);
+    client.onDisconnected = onDisconnected;
+
+    final connMessage = MqttConnectMessage()
+        .withClientIdentifier('flutter_client_${DateTime.now().millisecondsSinceEpoch}')
+        .startClean();
+
+    client.connectionMessage = connMessage;
+
+    try {
+      await client.connect();
+      print('Connected to MQTT broker');
+
+      client.subscribe('jijisafi/airquality', MqttQos.atLeastOnce);
+      client.updates!.listen((List<MqttReceivedMessage<MqttMessage>> c) {
+        final recMess = c[0].payload as MqttPublishMessage;
+        final payload =
+            MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+
+        print('Received message: $payload');
+
+        // Expecting a JSON string payload
+        final data = jsonDecode(payload);
+        setState(() {
+          temperature = (data['temperature'] ?? 0).toDouble();
+          humidity = (data['humidity'] ?? 0).toDouble();
+          rawAQ = (data['rawAQ'] ?? 0).toInt();
+          co2ppm = (data['co2ppm'] ?? 0).toDouble(); // Fixed key
+        });
+      });
+    } catch (e) {
+      print('Connection failed: $e');
+      client.disconnect();
+    }
+  }
+
+  void onDisconnected() {
+    print('Disconnected from MQTT broker');
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Jiji Safi Dashboard'),
@@ -95,17 +151,6 @@ class DashboardScreen extends StatelessWidget {
                         Text(
                           '$co2ppm ppm',
                           style: TextStyle(fontSize: 18, color: Colors.green[700], fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Icon(Icons.access_time, color: Colors.grey[600], size: 20),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Last updated: $timestamp',
-                          style: const TextStyle(fontSize: 14, color: Colors.black54),
                         ),
                       ],
                     ),

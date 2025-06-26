@@ -18,6 +18,7 @@ dependencies:
   flutter_dotenv: ^5.1.0
   cloud_firestore: ^4.17.0
   firebase_database: ^10.0.0
+  mqtt_client: ^10.2.0   # <-- Add this line for MQTT support
 
 flutter:
   uses-material-design: true
