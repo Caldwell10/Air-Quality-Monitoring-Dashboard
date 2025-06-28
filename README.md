@@ -55,7 +55,7 @@ The published JSON payload:
 ```
 ## Circuit Simulation
 
-A **Tinkercad simulation** was created to test the setup virtually before implementing it physically.
+A **Wokwi simulation** was created to test the setup virtually before implementing it physically.
 
 ---
 
